@@ -31,13 +31,12 @@ const notificationsRoutes = require('./routes/notifications');
 
 const app = express();
 const server = http.createServer(app);
-// Build allowed origins from env: support comma-separated FRONTEND_URLS or single FRONTEND_URL
-const allowedOrigins = (process.env.FRONTEND_URLS
-  ? process.env.FRONTEND_URLS.split(',')
-  : [process.env.FRONTEND_URL])
-  .concat(['http://localhost:3000'])
-  .filter(Boolean)
-  .map(s => s.trim());
+// Build allowed origins from env
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:3000',
+  'https://prime-quill-academy.vercel.app'
+].filter(Boolean).map(s => s.trim());
 
 const io = socketIo(server, {
   cors: {
