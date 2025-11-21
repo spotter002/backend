@@ -33,7 +33,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: [process.env.FRONTEND_URL, "http://localhost:3000"].filter(Boolean),
     methods: ["GET", "POST"]
   }
 });
@@ -42,7 +42,7 @@ const io = socketIo(server, {
 app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [process.env.FRONTEND_URL, 'http://localhost:3000'].filter(Boolean),
   credentials: true
 }));
 
