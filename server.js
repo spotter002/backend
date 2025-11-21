@@ -33,7 +33,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     methods: ["GET", "POST"]
   }
 });
@@ -42,7 +42,7 @@ const io = socketIo(server, {
 app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true
 }));
 
@@ -132,7 +132,8 @@ server.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV}`);
   console.log(`📡 Socket.IO enabled`);
-  console.log(`🔗 API Base: http://localhost:${PORT}/api`);
+  const apiBase = process.env.BACKEND_URL || `http://localhost:${PORT}`;
+  console.log(`🔗 API Base: ${apiBase}/api`);
   console.log('\n📋 Available Routes:');
   console.log('   /api/auth - Authentication');
   console.log('   /api/jobs - Job management');
