@@ -31,9 +31,17 @@ const notificationsRoutes = require('./routes/notifications');
 
 const app = express();
 const server = http.createServer(app);
+// Build allowed origins from env: support comma-separated FRONTEND_URLS or single FRONTEND_URL
+const allowedOrigins = (process.env.FRONTEND_URLS
+  ? process.env.FRONTEND_URLS.split(',')
+  : [process.env.FRONTEND_URL])
+  .concat(['http://localhost:3000'])
+  .filter(Boolean)
+  .map(s => s.trim());
+
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: allowedOrigins,
     methods: ["GET", "POST"]
   }
 });
@@ -42,7 +50,15 @@ const io = socketIo(server, {
 app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: function(origin, callback) {
+    // allow requests with no origin like mobile apps or curl
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+    const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+    return callback(new Error(msg), false);
+  },
   credentials: true
 }));
 
@@ -132,7 +148,8 @@ server.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV}`);
   console.log(`📡 Socket.IO enabled`);
-  console.log(`🔗 API Base: http://localhost:${PORT}/api`);
+  const apiBase = process.env.BACKEND_URL || `http://localhost:${PORT}`;
+  console.log(`🔗 API Base: ${apiBase}/api`);
   console.log('\n📋 Available Routes:');
   console.log('   /api/auth - Authentication');
   console.log('   /api/jobs - Job management');
