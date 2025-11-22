@@ -95,6 +95,8 @@ router.put('/:id/confirm', auth, async (req, res) => {
 // Get featured jobs for landing page (public)
 router.get('/featured', async (req, res) => {
   try {
+    console.log('💼 Fetching featured jobs...');
+    
     const jobs = await Job.find({ 
       status: 'open', 
       visibility: 'public' 
@@ -104,8 +106,10 @@ router.get('/featured', async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(6);
 
+    console.log(`✅ Found ${jobs.length} featured jobs`);
     res.json(jobs);
   } catch (error) {
+    console.error('❌ Featured jobs error:', error);
     res.status(500).json({ message: error.message });
   }
 });

@@ -32,35 +32,52 @@ const notificationsRoutes = require('./routes/notifications');
 const app = express();
 const server = http.createServer(app);
 // Build allowed origins from env: support comma-separated FRONTEND_URLS or single FRONTEND_URL
-const allowedOrigins = (process.env.FRONTEND_URLS
-  ? process.env.FRONTEND_URLS.split(',')
-  : [process.env.FRONTEND_URL])
-  .concat(['http://localhost:3000'])
-  .filter(Boolean)
-  .map(s => s.trim());
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://prime-quill-academy.vercel.app'
+].filter(Boolean).map(s => s.trim());
+
+console.log('🔗 Allowed CORS origins:', allowedOrigins);
 
 const io = socketIo(server, {
   cors: {
     origin: allowedOrigins,
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
 // Security middleware
 app.set('trust proxy', 1);
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+// CORS configuration
 app.use(cors({
   origin: function(origin, callback) {
-    // allow requests with no origin like mobile apps or curl
+    console.log('🌐 CORS request from origin:', origin);
+    // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
+    
+    console.log('❌ CORS blocked origin:', origin);
     const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
     return callback(new Error(msg), false);
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
 }));
+
+// Handle preflight requests
+app.options('*', cors());
 
 // Rate limiting
 const limiter = rateLimit({
